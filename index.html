@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kupony Kebab</title>
+
+<style>
+
+body{
+font-family: Arial;
+background: linear-gradient(135deg,#111,#2c2c2c);
+color:white;
+text-align:center;
+padding:40px;
+}
+
+h1{
+margin-bottom:40px;
+}
+
+/* container */
+.container{
+display:flex;
+justify-content:center;
+}
+
+/* kupon */
+.coupon{
+display:none;
+width:260px;
+background:#1f1f1f;
+border:2px solid #ffae00;
+border-radius:15px;
+overflow:hidden;
+cursor:pointer;
+transition:0.3s;
+}
+
+.coupon.active{
+display:block;
+}
+
+.coupon:hover{
+transform:scale(1.05);
+box-shadow:0 0 20px #ffae00;
+}
+
+.coupon.activated{
+border-color:lime;
+background:#064d06;
+}
+
+/* obraz */
+.coupon-img{
+width:100%;
+height:150px;
+object-fit:cover;
+}
+
+.coupon-content{
+padding:20px;
+}
+
+.date{
+margin-top:8px;
+font-size:14px;
+color:#ccc;
+}
+
+.timer{
+margin-top:8px;
+font-weight:bold;
+color:#ffd700;
+}
+
+/* QR */
+.qr-code{
+width:120px;
+margin-top:15px;
+display:none;
+border-radius:10px;
+background:white;
+padding:5px;
+animation:fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:scale(0.8);}
+to{opacity:1;transform:scale(1);}
+}
+
+/* pop animacja */
+.coupon.pop{
+animation:popEffect 0.4s ease;
+}
+
+@keyframes popEffect{
+0%{transform:scale(1);}
+50%{transform:scale(1.08);}
+100%{transform:scale(1);}
+}
+
+/* konfetti */
+.confetti-piece{
+position:fixed;
+width:8px;
+height:12px;
+top:0;
+z-index:9999;
+animation:fall linear forwards;
+}
+
+@keyframes fall{
+to{
+transform:translateY(100vh) rotate(720deg);
+opacity:0;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🔥 Kupony Kebab 🔥</h1>
+
+<div class="container">
+
+<!-- KUPOON 1 -->
+<div class="coupon active" onclick="activateCoupon(1)" id="coupon1">
+
+<img src="kepap.webp" class="coupon-img">
+
+<div class="coupon-content">
+
+<h2>Darmowy Kebs</h2>
+<p>Kliknij aby aktywować</p>
+
+<div class="date" id="date1"></div>
+<div class="timer" id="timer1"></div>
+
+<img src="Kebab_Number.png" class="qr-code" id="qr1">
+
+</div>
+</div>
+
+<!-- KUPOON 2 -->
+<div class="coupon" onclick="activateCoupon(2)" id="coupon2">
+
+<img src="kepap.webp" class="coupon-img">
+
+<div class="coupon-content">
+
+<h2>Darmowy Kebs</h2>
+<p>Kliknij aby aktywować</p>
+
+<div class="date" id="date2"></div>
+<div class="timer" id="timer2"></div>
+
+<img src="Kebab_Number.png" class="qr-code" id="qr2">
+
+</div>
+</div>
+
+<!-- KUPOON 3 -->
+<div class="coupon" onclick="activateCoupon(3)" id="coupon3">
+
+<img src="kepap.webp" class="coupon-img">
+
+<div class="coupon-content">
+
+<h2>Darmowy Kebs</h2>
+<p>Kliknij aby aktywować</p>
+
+<div class="date" id="date3"></div>
+<div class="timer" id="timer3"></div>
+
+<img src="Kebab_Number.png" class="qr-code" id="qr3">
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+const COUPON_DURATION = 10*60*1000;
+
+function activateCoupon(number){
+
+if(localStorage.getItem("coupon"+number)) return;
+
+const coupon=document.getElementById("coupon"+number);
+const dateDiv=document.getElementById("date"+number);
+const timerDiv=document.getElementById("timer"+number);
+const qr=document.getElementById("qr"+number);
+
+const now=new Date();
+const expireTime=now.getTime()+COUPON_DURATION;
+
+localStorage.setItem("coupon"+number,expireTime);
+
+coupon.classList.add("activated");
+coupon.classList.add("pop");
+
+dateDiv.innerHTML="Aktywowano: "+now.toLocaleString();
+
+qr.style.display="block";
+
+launchConfetti();
+
+startCountdown(number,expireTime);
+
+}
+
+function startCountdown(number,expireTime){
+
+const coupon=document.getElementById("coupon"+number);
+const timerDiv=document.getElementById("timer"+number);
+
+const interval=setInterval(()=>{
+
+const now=new Date().getTime();
+const timeLeft=expireTime-now;
+
+if(timeLeft<=0){
+
+clearInterval(interval);
+
+coupon.classList.remove("active");
+localStorage.removeItem("coupon"+number);
+
+const next=document.getElementById("coupon"+(number+1));
+
+if(next){
+next.classList.add("active");
+}
+
+return;
+}
+
+const minutes=Math.floor(timeLeft/60000);
+const seconds=Math.floor((timeLeft%60000)/1000);
+
+timerDiv.innerHTML=
+"Wygasa za: "+
+String(minutes).padStart(2,"0")+":"+
+String(seconds).padStart(2,"0");
+
+},1000);
+}
+
+window.onload=function(){
+
+let foundActive=false;
+
+for(let i=1;i<=3;i++){
+
+const savedExpire=localStorage.getItem("coupon"+i);
+
+const coupon=document.getElementById("coupon"+i);
+
+if(savedExpire){
+
+const expireTime=parseInt(savedExpire);
+const now=new Date().getTime();
+
+if(now>=expireTime){
+
+localStorage.removeItem("coupon"+i);
+
+if(!foundActive){
+const next=document.getElementById("coupon"+(i+1));
+if(next) next.classList.add("active");
+foundActive=true;
+}
+
+}else{
+
+coupon.classList.add("active");
+coupon.classList.add("activated");
+
+document.getElementById("qr"+i).style.display="block";
+
+startCountdown(i,expireTime);
+
+foundActive=true;
+}
+
+}else{
+
+if(!foundActive && i===1){
+coupon.classList.add("active");
+foundActive=true;
+}
+
+}
+
+}
+
+}
+
+function launchConfetti(){
+
+const colors=["#ff0000","#00ff00","#ffd700","#00ffff","#ff00ff"];
+
+for(let i=0;i<80;i++){
+
+const confetti=document.createElement("div");
+
+confetti.classList.add("confetti-piece");
+
+confetti.style.left=Math.random()*100+"vw";
+
+confetti.style.backgroundColor=colors[Math.floor(Math.random()*colors.length)];
+
+confetti.style.animationDuration=(Math.random()*2+2)+"s";
+
+document.body.appendChild(confetti);
+
+setTimeout(()=>{confetti.remove();},4000);
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
